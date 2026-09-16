@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Prediction Result</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+    <main class="container">
+        <section class="card result-card">
+            <p class="eyebrow">Prediction Result</p>
+            <h1>{{ prediction_text }}</h1>
+
+            <div class="probability-box {{ result_class }}">
+                <span>Model-estimated probability</span>
+                <strong>{{ probability }}</strong>
+            </div>
+
+            <p class="result-explanation">
+                This probability reflects the pattern learned by the Random
+                Forest from its training dataset. It is not the same as an
+                individualized clinical diagnosis or validated risk estimate.
+            </p>
+
+            <a class="button-link" href="{{ url_for('home') }}">
+                Try another prediction
+            </a>
+
+            <aside class="disclaimer">
+                <strong>Educational use only.</strong>
+                This model was trained on the Pima Indians Diabetes dataset.
+                It is not a validated clinical tool and must not be used for
+                diagnosis, screening, or treatment decisions.
+            </aside>
+        </section>
+    </main>
+</body>
+</html>
