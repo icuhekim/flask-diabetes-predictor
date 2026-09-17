@@ -1,112 +1,190 @@
-# Data Science Project Boilerplate
+# Diabetes Risk Prediction Web Application
 
-This boilerplate is designed to kickstart data science projects by providing a basic setup for database connections, data processing, and machine learning model development. It includes a structured folder organization for your datasets and a set of pre-defined Python packages necessary for most data science tasks.
+An educational machine-learning web application that uses a Random Forest classifier to estimate the probability of a positive diabetes outcome from eight input measurements.
 
-## Structure
+The trained model is integrated into a Flask interface and prepared for deployment on Render.
 
-The project is organized as follows:
+## Live application
 
-- **`src/app.py`** → Main Python script where your project will run.
-- **`src/explore.ipynb`** → Notebook for exploration and testing. Once exploration is complete, migrate the clean code to `app.py`.
-- **`src/utils.py`** → Auxiliary functions, such as database connection.
-- **`requirements.txt`** → List of required Python packages.
-- **`models/`** → Will contain your SQLAlchemy model classes.
-- **`data/`** → Stores datasets at different stages:
-  - **`data/raw/`** → Raw data.
-  - **`data/interim/`** → Temporarily transformed data.
-  - **`data/processed/`** → Data ready for analysis.
+The deployed application will be available here:
 
+**Render URL:** To be added after deployment
 
-## ⚡ Initial Setup in Codespaces (Recommended)
+## Project objective
 
-No manual setup is required, as **Codespaces is automatically configured** with the predefined files created by the academy for you. Just follow these steps:
+This project demonstrates the complete workflow of:
 
-1. **Wait for the environment to configure automatically**.
-   - All necessary packages and the database will install themselves.
-   - The automatically created `username` and `db_name` are in the **`.env`** file at the root of the project.
-2. **Once Codespaces is ready, you can start working immediately**.
+1. Exploring and preprocessing a dataset
+2. Training and optimizing a classification model
+3. Saving the preprocessing and modeling pipeline
+4. Integrating the trained pipeline into a Flask application
+5. Deploying the application as an online service
 
+## Dataset
 
-## 💻 Local Setup (Only if you can't use Codespaces)
+The project uses the Pima Indians Diabetes dataset. It contains 768 observations, eight predictor variables, and one binary target variable.
 
-**Prerequisites**
+### Predictor variables
 
-Make sure you have Python 3.11+ installed on your machine. You will also need pip to install the Python packages.
+- `Pregnancies`
+- `Glucose`
+- `BloodPressure`
+- `SkinThickness`
+- `Insulin`
+- `BMI`
+- `DiabetesPedigreeFunction`
+- `Age`
 
-**Installation**
+### Target
 
-Clone the project repository to your local machine.
+- `Outcome = 0`: Negative outcome
+- `Outcome = 1`: Positive outcome
 
-Navigate to the project directory and install the required Python packages:
+The dataset used in this project was obtained through the 4Geeks Academy dataset repository.
+
+## Data preprocessing
+
+Although the original dataset did not contain explicitly recorded null values, several physiologic measurements contained zeros that were treated as unrecorded values:
+
+- Glucose
+- Blood pressure
+- Skin thickness
+- Insulin
+- BMI
+
+A scikit-learn pipeline performs median imputation for these zero-coded missing measurements. The medians are learned only from the training data during model evaluation.
+
+Feature scaling was not applied because Random Forest models do not depend on distances or coefficient magnitudes.
+
+## Model development
+
+The data were divided into stratified training and testing sets. A Random Forest classifier was evaluated using accuracy, precision, recall, F1-score, ROC-AUC, and a confusion matrix.
+
+Hyperparameters were optimized with five-fold cross-validation using ROC-AUC as the scoring metric.
+
+### Selected hyperparameters
+
+```python
+RandomForestClassifier(
+    n_estimators=300,
+    max_depth=6,
+    min_samples_leaf=4,
+    class_weight=None,
+    random_state=42
+)
+```
+
+### Cross-validation result
+
+- Best cross-validated ROC-AUC: **0.841**
+
+### Held-out test performance of the deployment pipeline
+
+| Metric | Score |
+|---|---:|
+| Accuracy | 0.740 |
+| Precision | 0.675 |
+| Recall | 0.500 |
+| F1-score | 0.574 |
+| ROC-AUC | 0.807 |
+
+After evaluation, the final deployment pipeline was fitted using the complete dataset and saved with Joblib.
+
+## Web application
+
+The Flask application:
+
+1. Receives eight numeric values from an HTML form
+2. Creates a one-row pandas DataFrame
+3. Passes the data to the saved preprocessing-and-model pipeline
+4. Generates a predicted class and estimated probability
+5. Displays the result on a separate results page
+
+## Repository structure
+
+```text
+flask-diabetes-predictor/
+├── data/
+│   └── diabetes.csv
+├── models/
+│   └── diabetes_pipeline.pkl
+├── src/
+│   ├── static/
+│   │   └── style.css
+│   ├── templates/
+│   │   ├── index.html
+│   │   └── result.html
+│   ├── app.py
+│   └── explore.ipynb
+├── requirements.txt
+└── README.md
+```
+
+## Running the application locally
+
+Clone the repository and enter the project directory:
 
 ```bash
-pip install -r requirements.txt
+git clone <repository-url>
+cd flask-diabetes-predictor
 ```
 
-**Create a database (if necessary)**
-
-Create a new database within the Postgres engine by customizing and executing the following command:
+Install the dependencies:
 
 ```bash
-$ psql -U postgres -c "DO \$\$ BEGIN 
-    CREATE USER my_user WITH PASSWORD 'my_password'; 
-    CREATE DATABASE my_database OWNER my_user; 
-END \$\$;"
-```
-Connect to the Postgres engine to use your database, manipulate tables, and data:
-
-```bash
-$ psql -U my_user -d my_database
+python -m pip install -r requirements.txt
 ```
 
-Once inside PSQL, you can create tables, run queries, insert, update, or delete data, and much more!
-
-**Environment Variables**
-
-Create a .env file in the root directory of the project to store your environment variables, such as your database connection string:
-
-```makefile
-DATABASE_URL="postgresql://<USER>:<PASSWORD>@<HOST>:<PORT>/<DB_NAME>"
-
-#example
-DATABASE_URL="postgresql://my_user:my_password@localhost:5432/my_database"
-```
-
-## Running the Application
-
-To run the application, execute the app.py script from the root directory of the project:
+Run with the Flask development server:
 
 ```bash
 python src/app.py
 ```
 
-## Adding Models
+Then visit:
 
-To add SQLAlchemy model classes, create new Python script files within the models/ directory. These classes should be defined according to your database schema.
-
-Example model definition (`models/example_model.py`):
-
-```py
-from sqlalchemy.orm import declarative_base
-from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
-
-Base = declarative_base()
-
-class ExampleModel(Base):
-    __tablename__ = 'example_table'
-    id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(unique=True)
+```text
+http://127.0.0.1:5000
 ```
 
-## Working with Data
+The production-style Gunicorn command is:
 
-You can place your raw datasets in the data/raw directory, intermediate datasets in data/interim, and processed datasets ready for analysis in data/processed.
+```bash
+gunicorn --chdir src app:app
+```
 
-To process data, you can modify the app.py script to include your data processing steps, using pandas for data manipulation and analysis.
+Gunicorn serves the application locally at:
 
-## Contributors
+```text
+http://127.0.0.1:8000
+```
 
-This template was built as part of the [Data Science and Machine Learning Bootcamp](https://4geeksacademy.com/us/coding-bootcamps/datascience-machine-learning) by 4Geeks Academy by [Alejandro Sanchez](https://twitter.com/alesanchezr) and many other contributors. Learn more about [4Geeks Academy BootCamp programs](https://4geeksacademy.com/us/programs) here.
+## Technologies used
 
-Other templates and resources like this can be found on the school's GitHub page.
+- Python
+- pandas
+- NumPy
+- scikit-learn
+- Joblib
+- Flask
+- Gunicorn
+- HTML
+- CSS
+- Render
+
+## External resources
+
+- [Flask documentation](https://flask.palletsprojects.com/)
+- [scikit-learn documentation](https://scikit-learn.org/)
+- [Gunicorn documentation](https://docs.gunicorn.org/)
+- [Render documentation](https://render.com/docs)
+
+## Limitations
+
+This model was developed from a small historical dataset representing a specific population. Its performance has not been externally validated, and the dataset has substantial missingness in some predictors, particularly insulin and skin thickness.
+
+The displayed probability is a model output rather than a validated individualized clinical risk estimate.
+
+## Disclaimer
+
+This application is an educational machine-learning demonstration. It is not a validated clinical tool and must not be used for diagnosis, screening, treatment, or other medical decisions.
