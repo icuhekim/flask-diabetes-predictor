@@ -6,9 +6,13 @@ The trained model is integrated into a Flask interface and prepared for deployme
 
 ## Live application
 
-The deployed application will be available here:
 
-**Render URL:** To be added after deployment
+
+Try the deployed application:
+
+**[Open the Diabetes Risk Prediction App](https://flask-diabetes-predictor.onrender.com)**
+
+https://flask-diabetes-predictor.onrender.com
 
 ## Project objective
 
